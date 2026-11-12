@@ -2817,6 +2817,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             raceBar.setBackgroundResource(R.drawable.race_bar);
             raceSessions.setVisibility(View.VISIBLE);
             raceHeadline.setTextSize(TypedValue.COMPLEX_UNIT_SP, 34);
+            WeatherPanel.hide(racePanel, raceHeadline);
             updateRace();
         } else {
             GradientDrawable bar = new GradientDrawable();
@@ -2828,6 +2829,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // smaller than a countdown so the longer line stays a small widget.
             boolean asIs = t.word.startsWith("=");
             raceHeadline.setTextSize(TypedValue.COMPLEX_UNIT_SP, asIs ? 24 : 34);
+            // The weather add-on's "={...}" turns get their own layout (WeatherPanel); a plain "=" line is text.
+            if (!asIs || !WeatherPanel.show(this, racePanel, raceHeadline, t.word.substring(1))) {
+                WeatherPanel.hide(racePanel, raceHeadline);
+            }
             if (asIs) {
                 raceHeadline.setText(t.word.substring(1));
             } else if (GameDay.live(t, now)) {

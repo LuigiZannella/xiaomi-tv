@@ -80,7 +80,7 @@ public final class TurnsProvider extends ContentProvider {
 
     private static String placeKey(SharedPreferences place) {
         // The leading version makes a new build read anew instead of showing lines in the old format.
-        return "3|" + place.getString("name", "") + "|" + place.getLong("lat", 0) + "|" + place.getLong("lon", 0);
+        return "4|" + place.getString("name", "") + "|" + place.getLong("lat", 0) + "|" + place.getLong("lon", 0);
     }
 
     /** One read off the caller's thread; at most one at a time. */
@@ -119,11 +119,14 @@ public final class TurnsProvider extends ContentProvider {
         boolean day = current.optInt("is_day", 1) == 1;
         String nowTime = current.optString("time");
         JSONArray rows = new JSONArray();
-        StringBuilder now = new StringBuilder(Forecast.emoji(code, day)).append("  ")
-                .append(Forecast.degrees(temp, fahrenheit)).append("° · ").append(ctx.getString(Forecast.sky(code, day)));
-        if (!Double.isNaN(humidity)) now.append(" · ").append(ctx.getString(R.string.humidity, (int) Math.round(humidity)));
+        // The launcher's WeatherPanel draws these: the line, then humidity and rain in a column beside it.
+        JSONObject now = new JSONObject().put("main", Forecast.emoji(code, day) + "  "
+                + Forecast.degrees(temp, fahrenheit) + "° · " + ctx.getString(Forecast.sky(code, day)));
+        JSONArray side = new JSONArray();
+        if (!Double.isNaN(humidity)) side.put(side(DROP, ctx.getString(R.string.label_humidity), Math.round(humidity) + "%"));
         int rainNow = hourChance(chances, nowTime);
-        if (rainNow >= 0) now.append(" · ").append(ctx.getString(R.string.rain_chance, rainNow));
+        if (rainNow >= 0) side.put(side(UMBRELLA, ctx.getString(R.string.label_rain), rainNow + "%"));
+        now.put("side", side);
         rows.put(row(ctx.getString(R.string.turn_now, name), now.toString(), Forecast.barColour(code, day)));
 
         JSONObject hourly = reply.optJSONObject("hourly");
@@ -132,7 +135,7 @@ public final class TurnsProvider extends ContentProvider {
             JSONArray temps = hourly.getJSONArray("temperature_2m");
             JSONArray codes = hourly.getJSONArray("weather_code");
             JSONArray days = hourly.optJSONArray("is_day");
-            StringBuilder line = new StringBuilder();
+            JSONArray blocks = new JSONArray();
             int shown = 0;
             int firstCode = code;
             boolean firstDay = day;
@@ -146,31 +149,47 @@ public final class TurnsProvider extends ContentProvider {
                     firstCode = c;
                     firstDay = d;
                 }
-                if (shown > 0) line.append("   ");
-                line.append(time, 11, 16).append(' ').append(Forecast.emoji(c, d)).append(' ')
-                        .append(Forecast.degrees(t, fahrenheit)).append('°');
+                JSONObject block = new JSONObject().put("time", time.substring(11, 16))
+                        .put("main", Forecast.emoji(c, d) + " " + Forecast.degrees(t, fahrenheit) + "°");
                 int rain = hourChance(chances, time);
-                if (rain >= 0) line.append("  ").append(rain).append('%'); // the top line says it is the rain
+                if (rain >= 0) {
+                    block.put("icon", UMBRELLA).put("label", ctx.getString(R.string.label_rain)).put("value", rain + "%");
+                }
+                blocks.put(block);
                 shown++;
             }
-            if (shown > 0) rows.put(row(ctx.getString(R.string.turn_hours), line.toString(), Forecast.barColour(firstCode, firstDay)));
+            if (shown > 0) {
+                rows.put(row(ctx.getString(R.string.turn_hours), new JSONObject().put("hours", blocks).toString(),
+                        Forecast.barColour(firstCode, firstDay)));
+            }
         }
 
         try {
             List<Forecast.Day> next = Forecast.daysAt(where, Forecast.MIN_DAYS);
             if (!next.isEmpty()) {
                 Forecast.Day d = next.get(0);
-                String tomorrow = Forecast.emoji(d.code, true) + "  " + ctx.getString(Forecast.sky(d.code, true)) + " · "
+                JSONObject tomorrow = new JSONObject().put("main", Forecast.emoji(d.code, true) + "  "
+                        + ctx.getString(Forecast.sky(d.code, true)) + " · "
                         + ctx.getString(R.string.high_low, Forecast.degrees(d.maxC, fahrenheit),
-                        Forecast.degrees(d.minC, fahrenheit));
+                        Forecast.degrees(d.minC, fahrenheit)));
                 int rain = dayChance(chances, 1);
-                if (rain >= 0) tomorrow += " · " + ctx.getString(R.string.rain_chance, rain);
-                rows.put(row(ctx.getString(R.string.turn_tomorrow), tomorrow, Forecast.barColour(d.code, true)));
+                JSONArray tomorrowSide = new JSONArray();
+                if (rain >= 0) tomorrowSide.put(side(UMBRELLA, ctx.getString(R.string.label_rain), rain + "%"));
+                tomorrow.put("side", tomorrowSide);
+                rows.put(row(ctx.getString(R.string.turn_tomorrow), tomorrow.toString(), Forecast.barColour(d.code, true)));
             }
         } catch (IOException | JSONException noDays) {
             // Now and the next hours are still worth showing.
         }
         return rows;
+    }
+
+    /** 💧 humidity, ☔ chance of rain, each beside its word in the launcher's column. */
+    static final String DROP = "💧";
+    static final String UMBRELLA = "☔";
+
+    private static JSONObject side(String icon, String label, String value) throws JSONException {
+        return new JSONObject().put("icon", icon).put("label", label).put("value", value);
     }
 
     /** The chance of rain in the hour that contains this local time ("2026-11-12T17:15"), or -1. */

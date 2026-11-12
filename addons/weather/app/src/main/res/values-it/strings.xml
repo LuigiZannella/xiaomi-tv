@@ -67,7 +67,8 @@
     <string name="sky_snow_showers">Rovesci di neve</string>
     <string name="sky_thunderstorm">Temporale</string>
     <string name="turn_now">%1$s · adesso</string>
-    <string name="turn_hours">Prossime ore · pioggia</string>
+    <string name="turn_hours">Prossime ore</string>
     <string name="turn_tomorrow">Domani</string>
-    <string name="rain_chance">Pioggia %1$d%%</string>
+    <string name="label_humidity">Umidità</string>
+    <string name="label_rain">Pioggia</string>
 </resources>

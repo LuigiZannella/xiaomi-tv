@@ -66,7 +66,8 @@
     <string name="sky_snow_showers">Snow showers</string>
     <string name="sky_thunderstorm">Thunderstorm</string>
     <string name="turn_now">%1$s · now</string>
-    <string name="turn_hours">Next hours · rain</string>
+    <string name="turn_hours">Next hours</string>
     <string name="turn_tomorrow">Tomorrow</string>
-    <string name="rain_chance">Rain %1$d%%</string>
+    <string name="label_humidity">Humidity</string>
+    <string name="label_rain">Rain</string>
 </resources>

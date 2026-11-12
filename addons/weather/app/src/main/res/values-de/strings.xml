@@ -60,7 +60,8 @@
     <string name="sky_snow_showers">Schneeschauer</string>
     <string name="sky_thunderstorm">Gewitter</string>
     <string name="turn_now">%1$s · jetzt</string>
-    <string name="turn_hours">Nächste Stunden · Regen</string>
+    <string name="turn_hours">Nächste Stunden</string>
     <string name="turn_tomorrow">Morgen</string>
-    <string name="rain_chance">Regen %1$d%%</string>
+    <string name="label_humidity">Feuchte</string>
+    <string name="label_rain">Regen</string>
 </resources>
