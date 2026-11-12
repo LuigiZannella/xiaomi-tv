@@ -2816,6 +2816,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (t.f1) {
             raceBar.setBackgroundResource(R.drawable.race_bar);
             raceSessions.setVisibility(View.VISIBLE);
+            raceHeadline.setTextSize(TypedValue.COMPLEX_UNIT_SP, 34);
             updateRace();
         } else {
             GradientDrawable bar = new GradientDrawable();
@@ -2823,8 +2824,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             bar.setColor(t.colour);
             raceBar.setBackground(bar);
             raceKicker.setText(t.topLine);
-            if (t.word.startsWith("=")) {
-                // A line shown as written, with no countdown or "Live now": the weather add-on's now and next hours.
+            // A line shown as written, with no countdown or "Live now": the weather add-on's now and next hours,
+            // smaller than a countdown so the longer line stays a small widget.
+            boolean asIs = t.word.startsWith("=");
+            raceHeadline.setTextSize(TypedValue.COMPLEX_UNIT_SP, asIs ? 24 : 34);
+            if (asIs) {
                 raceHeadline.setText(t.word.substring(1));
             } else if (GameDay.live(t, now)) {
                 SpannableString live = new SpannableString("\u25CF  " + getString(R.string.game_live));

@@ -161,6 +161,15 @@ final class Forecast {
         return get(FORECAST + where + "&models=" + WORLD_MODEL + fields);
     }
 
+    /**
+     * The chance of rain in %, from ICON's ensemble: hourly (precipitation_probability, from the current hour) and
+     * daily (precipitation_probability_max, today first). ICON-2I is one run, so it has no chance to give.
+     */
+    static JSONObject rainChances(String where, int hours) throws IOException, JSONException {
+        return get(FORECAST + where + "&models=" + WORLD_MODEL + "&hourly=precipitation_probability&forecast_hours="
+                + hours + "&daily=precipitation_probability_max&forecast_days=2&timezone=auto");
+    }
+
     /** The days after today, tomorrow first, from ICON. */
     static List<Day> daysAt(String where, int days) throws IOException, JSONException {
         return days(get(FORECAST + where + "&models=" + WORLD_MODEL
