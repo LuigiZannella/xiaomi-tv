@@ -119,21 +119,53 @@ final class Forecast {
      * service: if it fails, aqi is -1.
      */
     static Report fetch(double latitude, double longitude, int days) throws IOException, JSONException {
-        String where = String.format(Locale.ROOT, "latitude=%.4f&longitude=%.4f", latitude, longitude);
-        // DWD's ICON model: Open-Meteo's default blend called light snow over Ulaanbaatar "overcast" while ICON,
-        // and Google, had snow falling.
-        JSONObject reply = get("https://api.open-meteo.com/v1/forecast?" + where + "&models=icon_seamless"
-                + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day,wind_speed_10m"
-                + "&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days="
-                + (forecastDays(days) + 1));
-        JSONObject current = reply.getJSONObject("current");
+        String where = where(latitude, longitude);
+        JSONObject current = now(where, 0).getJSONObject("current");
         double temp = current.getDouble("temperature_2m");
-        double humidity = current.getDouble("relative_humidity_2m");
+        double humidity = current.optDouble("relative_humidity_2m", 100);
         int code = snowIfCold(current.getInt("weather_code"), temp, humidity);
-        return new Report(temp, current.getDouble("apparent_temperature"),
-                code, current.getInt("is_day") == 1,
-                days(reply.getJSONObject("daily")), aqiOrUnknown(where),
+        return new Report(temp, current.optDouble("apparent_temperature", temp),
+                code, current.optInt("is_day", 1) == 1,
+                daysAt(where, days), aqiOrUnknown(where),
                 (int) Math.round(humidity), (int) Math.round(current.optDouble("wind_speed_10m", 0)));
+    }
+
+    private static final String FORECAST = "https://api.open-meteo.com/v1/forecast?";
+    /** ItaliaMeteo-ARPAE ICON-2I: about 2 km over Italy, hourly, 3 days; Open-Meteo answers 400 outside its area. */
+    static final String ITALY_MODEL = "italia_meteo_arpae_icon_2i";
+    /**
+     * DWD's ICON model: Open-Meteo's default blend called light snow over Ulaanbaatar "overcast" while ICON,
+     * and Google, had snow falling. Used for the days (ICON-2I has only 3) and wherever ICON-2I has no data.
+     */
+    static final String WORLD_MODEL = "icon_seamless";
+
+    static String where(double latitude, double longitude) {
+        return String.format(Locale.ROOT, "latitude=%.4f&longitude=%.4f", latitude, longitude);
+    }
+
+    /**
+     * The weather now and, with hours above 0, that many hours from the current one: ICON-2I where it has data
+     * (Italy and around it), ICON everywhere else. The page and the line under Home's clock both read it, so they agree.
+     */
+    static JSONObject now(String where, int hours) throws IOException, JSONException {
+        String fields = "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day,wind_speed_10m"
+                + (hours > 0 ? "&hourly=temperature_2m,weather_code,is_day&forecast_hours=" + hours : "")
+                + "&timezone=auto";
+        try {
+            JSONObject reply = get(FORECAST + where + "&models=" + ITALY_MODEL + fields);
+            JSONObject current = reply.optJSONObject("current");
+            if (current != null && !current.isNull("temperature_2m") && !current.isNull("weather_code")) return reply;
+        } catch (IOException | JSONException outsideItaly) {
+            // "No data is available for this location": ICON below.
+        }
+        return get(FORECAST + where + "&models=" + WORLD_MODEL + fields);
+    }
+
+    /** The days after today, tomorrow first, from ICON. */
+    static List<Day> daysAt(String where, int days) throws IOException, JSONException {
+        return days(get(FORECAST + where + "&models=" + WORLD_MODEL
+                + "&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days="
+                + (forecastDays(days) + 1)).getJSONObject("daily"));
     }
 
     /**
@@ -234,6 +266,34 @@ final class Forecast {
             case 85: case 86: return R.string.sky_snow_showers;
             default: return code >= 95 ? R.string.sky_thunderstorm : R.string.sky_cloudy;
         }
+    }
+
+    /** A small picture for a WMO code, for the line under Home's clock. */
+    static String emoji(int code, boolean day) {
+        switch (code) {
+            case 0: return day ? "☀️" : "🌙";
+            case 1: return day ? "🌤️" : "🌙";
+            case 2: return "⛅";
+            case 3: return "☁️";
+            case 45: case 48: return "🌫️";
+            case 51: case 53: case 55: case 80: case 81: case 82: return "🌦️";
+            case 71: case 73: case 75: case 77: case 85: case 86: return "❄️";
+            default:
+                if (code >= 95) return "⛈️";
+                if (code >= 56) return "🌧️";
+                return "☁️";
+        }
+    }
+
+    /** The colour of the short bar beside the line under Home's clock. */
+    static int barColour(int code, boolean day) {
+        if (code <= 1) return day ? 0xFFFFC83D : 0xFF8C9EFF;
+        if (code == 2) return 0xFFE3C26B;
+        if (code == 45 || code == 48) return 0xFFB0B7BF;
+        if ((code >= 71 && code <= 77) || code == 85 || code == 86) return 0xFFE8F1FF;
+        if (code >= 95) return 0xFFB27CFF;
+        if (code >= 51) return 0xFF4A9BFF;
+        return 0xFF9AA4AE;
     }
 
     /** US AQI bands: upper bound, words, pill colour. */

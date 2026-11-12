@@ -66,4 +66,7 @@
     <string name="sky_showers">Chubascos</string>
     <string name="sky_snow_showers">Chubascos de nieve</string>
     <string name="sky_thunderstorm">Tormenta</string>
+    <string name="turn_now">%1$s · ahora</string>
+    <string name="turn_hours">Próximas horas</string>
+    <string name="turn_tomorrow">Mañana</string>
 </resources>

@@ -2823,7 +2823,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             bar.setColor(t.colour);
             raceBar.setBackground(bar);
             raceKicker.setText(t.topLine);
-            if (GameDay.live(t, now)) {
+            if (t.word.startsWith("=")) {
+                // A line shown as written, with no countdown or "Live now": the weather add-on's now and next hours.
+                raceHeadline.setText(t.word.substring(1));
+            } else if (GameDay.live(t, now)) {
                 SpannableString live = new SpannableString("\u25CF  " + getString(R.string.game_live));
                 live.setSpan(new ForegroundColorSpan(RACE_RED), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 raceHeadline.setText(live);

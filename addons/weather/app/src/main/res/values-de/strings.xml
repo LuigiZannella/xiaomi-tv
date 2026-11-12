@@ -59,4 +59,7 @@
     <string name="sky_showers">Schauer</string>
     <string name="sky_snow_showers">Schneeschauer</string>
     <string name="sky_thunderstorm">Gewitter</string>
+    <string name="turn_now">%1$s · jetzt</string>
+    <string name="turn_hours">Nächste Stunden</string>
+    <string name="turn_tomorrow">Morgen</string>
 </resources>

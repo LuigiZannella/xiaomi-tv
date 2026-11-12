@@ -66,4 +66,7 @@
     <string name="sky_showers">Rovesci</string>
     <string name="sky_snow_showers">Rovesci di neve</string>
     <string name="sky_thunderstorm">Temporale</string>
+    <string name="turn_now">%1$s · adesso</string>
+    <string name="turn_hours">Prossime ore</string>
+    <string name="turn_tomorrow">Domani</string>
 </resources>

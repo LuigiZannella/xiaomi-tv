@@ -48,4 +48,7 @@
     <string name="sky_showers">Averses</string>
     <string name="sky_snow_showers">Averses de neige</string>
     <string name="sky_thunderstorm">Orage</string>
+    <string name="turn_now">%1$s · maintenant</string>
+    <string name="turn_hours">Prochaines heures</string>
+    <string name="turn_tomorrow">Demain</string>
 </resources>

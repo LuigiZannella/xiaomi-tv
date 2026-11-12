@@ -65,4 +65,7 @@
     <string name="sky_showers">Sağanak yağmur</string>
     <string name="sky_snow_showers">Sağanak kar</string>
     <string name="sky_thunderstorm">Gök gürültülü sağanak</string>
+    <string name="turn_now">%1$s · şimdi</string>
+    <string name="turn_hours">Sonraki saatler</string>
+    <string name="turn_tomorrow">Yarın</string>
 </resources>

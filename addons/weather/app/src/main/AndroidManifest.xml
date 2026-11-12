@@ -15,6 +15,14 @@
         android:supportsRtl="false"
         android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen">
 
+        <!-- The line under the Clean Your TV launcher's clock (docs/modules.md, game_day): now, the next hours and
+             tomorrow. Read-only; it holds only the place name and the weather Home shows anyway. -->
+        <meta-data android:name="com.gathin.tvhome.games" android:value="io.github.sumyabazar1.weather.turns" />
+        <provider
+            android:name=".TurnsProvider"
+            android:authorities="io.github.sumyabazar1.weather.turns"
+            android:exported="true" />
+
         <activity
             android:name=".WeatherActivity"
             android:exported="true"

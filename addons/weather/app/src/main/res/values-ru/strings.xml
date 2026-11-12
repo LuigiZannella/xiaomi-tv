@@ -67,4 +67,7 @@
     <string name="sky_showers">Ливень</string>
     <string name="sky_snow_showers">Ливневый снег</string>
     <string name="sky_thunderstorm">Гроза</string>
+    <string name="turn_now">%1$s · сейчас</string>
+    <string name="turn_hours">Ближайшие часы</string>
+    <string name="turn_tomorrow">Завтра</string>
 </resources>
