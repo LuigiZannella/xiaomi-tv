@@ -78,7 +78,7 @@
          the Live TV app normally instead of selecting a different input. A wrong but registered ID
          can open the app's tuner setup screen instead; that is not detected as a fallback condition.
          Use a verified input ID, or leave this empty. See docs/devices/haam-r4.md. -->
-    <string name="live_tv_input_id" translatable="false"></string>
+    <string name="live_tv_input_id" translatable="false">com.mediatek.tvinput/.tuner.TunerInputService/HW0</string>
 
     <!-- Tiles that open a screen of the app instead of its start screen: "package=action", sent to that package.
          A tile whose action no longer resolves opens the app normally. MagentaTV's program guide:
