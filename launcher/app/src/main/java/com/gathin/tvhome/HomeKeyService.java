@@ -362,7 +362,7 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     /** power_on_home_always: after the firmware has brought its last source back (Philips: within 0.5 s). */
-    static final long POWER_ON_ALWAYS_DELAY_MS = 800L;
+    static final long POWER_ON_ALWAYS_DELAY_MS = 0L;
 
     /** power_on_home_always: Home, unless a key was pressed since the screen came on (the user has the TV). */
     private void homeAtPowerOn() {
