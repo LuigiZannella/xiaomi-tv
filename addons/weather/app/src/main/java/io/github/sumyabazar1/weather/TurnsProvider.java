@@ -80,7 +80,7 @@ public final class TurnsProvider extends ContentProvider {
 
     private static String placeKey(SharedPreferences place) {
         // The leading version makes a new build read anew instead of showing lines in the old format.
-        return "2|" + place.getString("name", "") + "|" + place.getLong("lat", 0) + "|" + place.getLong("lon", 0);
+        return "3|" + place.getString("name", "") + "|" + place.getLong("lat", 0) + "|" + place.getLong("lon", 0);
     }
 
     /** One read off the caller's thread; at most one at a time. */
@@ -111,12 +111,7 @@ public final class TurnsProvider extends ContentProvider {
             throws IOException, JSONException {
         String where = Forecast.where(lat, lon);
         JSONObject reply = Forecast.now(where, 6);
-        JSONObject chances;
-        try {
-            chances = Forecast.rainChances(where, 6);
-        } catch (IOException | JSONException noChances) {
-            chances = null; // the lines go without the ☔ part
-        }
+        JSONObject chances = reply; // one ICON reply: the sky, the degrees and the chances of rain agree
         JSONObject current = reply.getJSONObject("current");
         double temp = current.getDouble("temperature_2m");
         double humidity = current.optDouble("relative_humidity_2m", Double.NaN);
@@ -126,9 +121,9 @@ public final class TurnsProvider extends ContentProvider {
         JSONArray rows = new JSONArray();
         StringBuilder now = new StringBuilder(Forecast.emoji(code, day)).append("  ")
                 .append(Forecast.degrees(temp, fahrenheit)).append("° · ").append(ctx.getString(Forecast.sky(code, day)));
-        if (!Double.isNaN(humidity)) now.append("   ").append(HUMIDITY).append(' ').append(Math.round(humidity)).append('%');
+        if (!Double.isNaN(humidity)) now.append(" · ").append(ctx.getString(R.string.humidity, (int) Math.round(humidity)));
         int rainNow = hourChance(chances, nowTime);
-        if (rainNow >= 0) now.append("   ").append(RAIN).append(' ').append(rainNow).append('%');
+        if (rainNow >= 0) now.append(" · ").append(ctx.getString(R.string.rain_chance, rainNow));
         rows.put(row(ctx.getString(R.string.turn_now, name), now.toString(), Forecast.barColour(code, day)));
 
         JSONObject hourly = reply.optJSONObject("hourly");
@@ -155,7 +150,7 @@ public final class TurnsProvider extends ContentProvider {
                 line.append(time, 11, 16).append(' ').append(Forecast.emoji(c, d)).append(' ')
                         .append(Forecast.degrees(t, fahrenheit)).append('°');
                 int rain = hourChance(chances, time);
-                if (rain >= 0) line.append(' ').append(RAIN).append(rain).append('%');
+                if (rain >= 0) line.append("  ").append(rain).append('%'); // the top line says it is the rain
                 shown++;
             }
             if (shown > 0) rows.put(row(ctx.getString(R.string.turn_hours), line.toString(), Forecast.barColour(firstCode, firstDay)));
@@ -169,7 +164,7 @@ public final class TurnsProvider extends ContentProvider {
                         + ctx.getString(R.string.high_low, Forecast.degrees(d.maxC, fahrenheit),
                         Forecast.degrees(d.minC, fahrenheit));
                 int rain = dayChance(chances, 1);
-                if (rain >= 0) tomorrow += "   " + RAIN + " " + rain + "%";
+                if (rain >= 0) tomorrow += " · " + ctx.getString(R.string.rain_chance, rain);
                 rows.put(row(ctx.getString(R.string.turn_tomorrow), tomorrow, Forecast.barColour(d.code, true)));
             }
         } catch (IOException | JSONException noDays) {
@@ -177,10 +172,6 @@ public final class TurnsProvider extends ContentProvider {
         }
         return rows;
     }
-
-    /** 💧 relative humidity, ☔ chance of rain. */
-    static final String HUMIDITY = "💧";
-    static final String RAIN = "☔";
 
     /** The chance of rain in the hour that contains this local time ("2026-11-12T17:15"), or -1. */
     static int hourChance(JSONObject chances, String time) {

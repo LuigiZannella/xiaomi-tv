@@ -131,11 +131,9 @@ final class Forecast {
     }
 
     private static final String FORECAST = "https://api.open-meteo.com/v1/forecast?";
-    /** ItaliaMeteo-ARPAE ICON-2I: about 2 km over Italy, hourly, 3 days; Open-Meteo answers 400 outside its area. */
-    static final String ITALY_MODEL = "italia_meteo_arpae_icon_2i";
     /**
      * DWD's ICON model: Open-Meteo's default blend called light snow over Ulaanbaatar "overcast" while ICON,
-     * and Google, had snow falling. Used for the days (ICON-2I has only 3) and wherever ICON-2I has no data.
+     * and Google, had snow falling. Its ensemble also gives the chance of rain.
      */
     static final String WORLD_MODEL = "icon_seamless";
 
@@ -144,30 +142,16 @@ final class Forecast {
     }
 
     /**
-     * The weather now and, with hours above 0, that many hours from the current one: ICON-2I where it has data
-     * (Italy and around it), ICON everywhere else. The page and the line under Home's clock both read it, so they agree.
+     * The weather now and, with hours above 0, that many hours from the current one, with the chance of rain per
+     * hour. All from ICON, like the days and the chances, so the sky, the degrees and the chance of rain on the page
+     * and under Home's clock always come from one model and cannot contradict each other. (ICON-2I, sharper over
+     * Italy, was tried and dropped: it has no chance of rain, and two models side by side read as nonsense.)
      */
     static JSONObject now(String where, int hours) throws IOException, JSONException {
-        String fields = "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day,wind_speed_10m"
-                + (hours > 0 ? "&hourly=temperature_2m,weather_code,is_day&forecast_hours=" + hours : "")
-                + "&timezone=auto";
-        try {
-            JSONObject reply = get(FORECAST + where + "&models=" + ITALY_MODEL + fields);
-            JSONObject current = reply.optJSONObject("current");
-            if (current != null && !current.isNull("temperature_2m") && !current.isNull("weather_code")) return reply;
-        } catch (IOException | JSONException outsideItaly) {
-            // "No data is available for this location": ICON below.
-        }
-        return get(FORECAST + where + "&models=" + WORLD_MODEL + fields);
-    }
-
-    /**
-     * The chance of rain in %, from ICON's ensemble: hourly (precipitation_probability, from the current hour) and
-     * daily (precipitation_probability_max, today first). ICON-2I is one run, so it has no chance to give.
-     */
-    static JSONObject rainChances(String where, int hours) throws IOException, JSONException {
-        return get(FORECAST + where + "&models=" + WORLD_MODEL + "&hourly=precipitation_probability&forecast_hours="
-                + hours + "&daily=precipitation_probability_max&forecast_days=2&timezone=auto");
+        return get(FORECAST + where + "&models=" + WORLD_MODEL
+                + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day,wind_speed_10m"
+                + (hours > 0 ? "&hourly=temperature_2m,weather_code,is_day,precipitation_probability&forecast_hours=" + hours : "")
+                + "&daily=precipitation_probability_max&forecast_days=2&timezone=auto");
     }
 
     /** The days after today, tomorrow first, from ICON. */
